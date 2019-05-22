@@ -194,4 +194,4 @@ PPs. It's exciting when I saw the `xcalc` pop up in the Chrome, although it is j
 
 
 
-![](E:\git_repo\browser-pwn\oob\result.png)
+![](.\result.png)
