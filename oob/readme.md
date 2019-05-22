@@ -195,3 +195,13 @@ PPs. It's exciting when I saw the `xcalc` pop up in the Chrome, although it is j
 
 
 ![](https://raw.githubusercontent.com/ret2p4nda/browser-pwn/master/oob/result.png)
+
+
+
+**Reference**
+
+https://p1umer.github.io/2019/05/06/Star-CTF-OOB-writeup/
+
+https://changochen.github.io/2019-04-29-starctf-2019.html
+
+https://abiondo.me/2019/01/02/exploiting-math-expm1-v8/#triggering-an-oob-access?tdsourcetag=s_pctim_aiomsg
