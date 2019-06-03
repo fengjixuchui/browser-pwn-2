@@ -5,3 +5,5 @@
 
 ## [starCTF 2019 OOB](https://github.com/ret2p4nda/browser-pwn/tree/master/oob)
 
+## [Plaid CTF 2018 roll a d8](https://github.com/ret2p4nda/browser-pwn/tree/master/roll%20a%20d8)
+
