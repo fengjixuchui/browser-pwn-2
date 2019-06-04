@@ -1,9 +1,0 @@
-defines = -DV8_DEPRECATION_WARNINGS -DUSE_UDEV -DUSE_AURA=1 -DUSE_GLIB=1 -DUSE_NSS_CERTS=1 -DUSE_X11=1 -DFULL_SAFE_BROWSING -DSAFE_BROWSING_CSD -DSAFE_BROWSING_DB_LOCAL -DCHROMIUM_BUILD -DFIELDTRIAL_TESTING_ENABLED -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -DCR_CLANG_REVISION=\"325667-1\" -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D_LIBCPP_DISABLE_VISIBILITY_ANNOTATIONS -D_LIBCXXABI_DISABLE_VISIBILITY_ANNOTATIONS -DNDEBUG -DNVALGRIND -DDYNAMIC_ANNOTATIONS_ENABLED=0
-include_dirs = -I../.. -Igen
-label_name = v8_maybe_snapshot
-target_out_dir = obj
-target_output_name = v8_maybe_snapshot
-
-build obj/v8_maybe_snapshot.inputdeps.stamp: stamp obj/js2c.stamp obj/js2c_experimental_extras.stamp obj/js2c_extras.stamp obj/natives_blob.stamp obj/run_mksnapshot.stamp obj/v8_dump_build_config.stamp obj/src/inspector/inspector_injected_script.stamp obj/src/inspector/protocol_compatibility.stamp obj/src/inspector/protocol_generated_sources.stamp obj/third_party/icu/icudata.stamp
-
-build obj/v8_maybe_snapshot.stamp: stamp || obj/v8_external_snapshot.stamp obj/v8_base.stamp obj/third_party/icu/libicui18n.a obj/third_party/icu/libicuuc.a obj/buildtools/third_party/libc++/libc++.stamp obj/buildtools/third_party/libc++abi/libc++abi.stamp obj/v8_headers.stamp obj/v8_version.stamp obj/libv8_libbase.a obj/v8_libsampler.stamp obj/src/inspector/inspector.stamp
