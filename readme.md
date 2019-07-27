@@ -7,6 +7,8 @@
 
 ## [Plaid CTF 2018 roll a d8](https://github.com/ret2p4nda/browser-pwn/tree/master/roll%20a%20d8)
 
+## [QWB CTF 2019 growupjs](https://github.com/ret2p4nda/browser-pwn/tree/master/growupjs)
+
 [+] Some Real-World vulnerability analyse
 
 ## [CVE-2018-17463](<https://github.com/ret2p4nda/browser-pwn/tree/master/CVE-2018-17463>)
